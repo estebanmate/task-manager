@@ -5,7 +5,8 @@ import java.util.Date
 
 data class Task(
     @DocumentId
-    val id: String? = null,
+    var id: String? = null,
+    var userId: String = "",
     val title: String = "",
     val description: String = "",
     val startTime: Date = Date(),

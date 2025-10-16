@@ -27,6 +27,13 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        if (FirebaseManager.getCurrentUser() == null) {
+            val intent = Intent(this, LoginActivity::class.java)
+            startActivity(intent)
+            finish()
+            return
+        }
+
         toolbar = findViewById(R.id.toolbar)
         setSupportActionBar(toolbar)
 
