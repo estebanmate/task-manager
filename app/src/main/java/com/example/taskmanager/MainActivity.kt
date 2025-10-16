@@ -1,22 +1,19 @@
 package com.example.taskmanager
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
-import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
+import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.taskmanager.model.Task
-import com.example.taskmanager.model.TaskStatus
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
-import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
@@ -103,6 +100,7 @@ class MainActivity : AppCompatActivity() {
                 }.time
                 allTasks.filter { it.startTime >= startOfDay && it.startTime < endOfDay }
             }
+
             "Week" -> {
                 val startOfWeek = Calendar.getInstance().apply {
                     set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
@@ -121,6 +119,7 @@ class MainActivity : AppCompatActivity() {
                 }.time
                 allTasks.filter { it.startTime >= startOfWeek && it.startTime < endOfWeek }
             }
+
             "Month" -> {
                 val startOfMonth = Calendar.getInstance().apply {
                     set(Calendar.DAY_OF_MONTH, 1)
@@ -137,8 +136,9 @@ class MainActivity : AppCompatActivity() {
                     set(Calendar.MILLISECOND, 0)
                     add(Calendar.MONTH, 1)
                 }.time
-                allTasks.filter { it.startTime >= startOfMonth && it.startTime < endOfMonth }
+                allTasks.filter { it.startTime in startOfMonth..<endOfMonth }
             }
+
             else -> allTasks
         }
         taskAdapter.updateTasks(filteredTasks)
