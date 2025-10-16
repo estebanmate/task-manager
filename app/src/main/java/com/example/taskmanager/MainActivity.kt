@@ -5,6 +5,8 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import android.widget.Spinner
 import androidx.appcompat.widget.Toolbar
@@ -14,6 +16,7 @@ import com.example.taskmanager.model.Task
 import com.example.taskmanager.model.TaskStatus
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.util.*
+import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
 
@@ -21,6 +24,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var taskAdapter: TaskAdapter
     private lateinit var fab: FloatingActionButton
     private lateinit var toolbar: Toolbar
+    private var allTasks = listOf<Task>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,8 +36,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView = findViewById(R.id.recyclerView)
         recyclerView.layoutManager = LinearLayoutManager(this)
 
-        val tasks = createDummyTasks()
-        taskAdapter = TaskAdapter(tasks)
+        taskAdapter = TaskAdapter(emptyList())
         recyclerView.adapter = taskAdapter
 
         fab = findViewById(R.id.fab)
@@ -41,6 +44,20 @@ class MainActivity : AppCompatActivity() {
             val intent = Intent(this, AddEditTaskActivity::class.java)
             startActivity(intent)
         }
+
+        loadTasks()
+    }
+
+    private fun loadTasks() {
+        FirebaseManager.getTasks { tasks ->
+            allTasks = tasks
+            filterTasks("Day") // Default to Day view
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        loadTasks()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -55,35 +72,75 @@ class MainActivity : AppCompatActivity() {
         )
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         spinner.adapter = adapter
+
+        spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long) {
+                filterTasks(parent.getItemAtPosition(position).toString())
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {
+                // Do nothing
+            }
+        }
         return true
     }
 
-    private fun createDummyTasks(): List<Task> {
-        return listOf(
-            Task(
-                id = "1",
-                title = "Task 1",
-                description = "Description for task 1",
-                startTime = Date(),
-                endTime = Date(),
-                status = TaskStatus.TO_DO
-            ),
-            Task(
-                id = "2",
-                title = "Task 2",
-                description = "Description for task 2",
-                startTime = Date(),
-                endTime = Date(),
-                status = TaskStatus.IN_PROGRESS
-            ),
-            Task(
-                id = "3",
-                title = "Task 3",
-                description = "Description for task 3",
-                startTime = Date(),
-                endTime = Date(),
-                status = TaskStatus.COMPLETE
-            )
-        )
+    private fun filterTasks(viewType: String) {
+        val filteredTasks = when (viewType) {
+            "Day" -> {
+                val startOfDay = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.time
+                val endOfDay = Calendar.getInstance().apply {
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                    add(Calendar.DAY_OF_MONTH, 1)
+                }.time
+                allTasks.filter { it.startTime >= startOfDay && it.startTime < endOfDay }
+            }
+            "Week" -> {
+                val startOfWeek = Calendar.getInstance().apply {
+                    set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.time
+                val endOfWeek = Calendar.getInstance().apply {
+                    set(Calendar.DAY_OF_WEEK, firstDayOfWeek)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                    add(Calendar.WEEK_OF_YEAR, 1)
+                }.time
+                allTasks.filter { it.startTime >= startOfWeek && it.startTime < endOfWeek }
+            }
+            "Month" -> {
+                val startOfMonth = Calendar.getInstance().apply {
+                    set(Calendar.DAY_OF_MONTH, 1)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                }.time
+                val endOfMonth = Calendar.getInstance().apply {
+                    set(Calendar.DAY_OF_MONTH, 1)
+                    set(Calendar.HOUR_OF_DAY, 0)
+                    set(Calendar.MINUTE, 0)
+                    set(Calendar.SECOND, 0)
+                    set(Calendar.MILLISECOND, 0)
+                    add(Calendar.MONTH, 1)
+                }.time
+                allTasks.filter { it.startTime >= startOfMonth && it.startTime < endOfMonth }
+            }
+            else -> allTasks
+        }
+        taskAdapter.updateTasks(filteredTasks)
     }
 }

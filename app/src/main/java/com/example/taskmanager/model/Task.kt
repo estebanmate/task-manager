@@ -6,9 +6,9 @@ import java.util.Date
 data class Task(
     @DocumentId
     val id: String? = null,
-    val title: String,
-    val description: String,
-    val startTime: Date,
-    val endTime: Date,
-    val status: TaskStatus
+    val title: String = "",
+    val description: String = "",
+    val startTime: Date = Date(),
+    val endTime: Date = Date(),
+    val status: TaskStatus = TaskStatus.TO_DO
 )
